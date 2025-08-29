@@ -1,0 +1,262 @@
+using System;
+using System.Runtime.InteropServices;
+
+class JogoDaVelha
+{
+    static char[] tabuleiro = new char[10]; // Usaremos índices 1 a 9
+    static int vitoriasJogador1 = 0, vitoriasJogador2 = 0, empates = 0;
+
+    static void Main()
+    {
+        bool rodando = true;
+        while (rodando)
+        {
+            Console.Clear();
+            Console.WriteLine("=== JOGO DA VELHA ===");
+            Console.WriteLine("1 - Jogador vs Jogador");
+            Console.WriteLine("2 - Jogador vs Computador (Fácil)");
+            Console.WriteLine("3 - Jogador vs Computador (Difícil)");
+            Console.WriteLine("4 - Exibir Ranking");
+            Console.WriteLine("0 - Sair");
+            Console.Write("Escolha uma opção: ");
+            string opcao = Console.ReadLine();
+
+            switch (opcao)
+            {
+                case "1":
+                    JogarVsJogador();
+                    break;
+                case "2":
+                    JogarVsComputador(false);
+                    break;
+                case "3":
+                    JogarVsComputador(true);
+                    break;
+                case "4":
+                    ExibirRanking();
+                    break;
+                case "0":
+                    rodando = false;
+                    break;
+                default:
+                    Console.WriteLine("Opção inválida!");
+                    Console.ReadKey();
+                    break;
+            }
+        }
+    }
+
+    static void InicializarTabuleiro()
+    {
+        for (int i = 1; i <= 9; i++)
+            tabuleiro[i] = ' ';
+    }
+
+    static void ExibirTabuleiro()
+    {
+        Console.Clear();
+        Console.WriteLine("     |     |      ");
+        Console.WriteLine("  {0}  |  {1}  |  {2}", tabuleiro[1], tabuleiro[2], tabuleiro[3]);
+        Console.WriteLine("_____|_____|_____ ");
+        Console.WriteLine("     |     |      ");
+        Console.WriteLine("  {0}  |  {1}  |  {2}", tabuleiro[4], tabuleiro[5], tabuleiro[6]);
+        Console.WriteLine("_____|_____|_____ ");
+        Console.WriteLine("     |     |      ");
+        Console.WriteLine("  {0}  |  {1}  |  {2}", tabuleiro[7], tabuleiro[8], tabuleiro[9]);
+        Console.WriteLine("     |     |      ");
+    }
+
+    static bool VerificarVitoria(char jogador)
+    {
+        int[,] combinacoes = new int[,]
+        {
+            {1,2,3},{4,5,6},{7,8,9},
+            {1,4,7},{2,5,8},{3,6,9},
+            {1,5,9},{3,5,7}
+        };
+
+        for (int i = 0; i < combinacoes.GetLength(0); i++)
+        {
+            if (tabuleiro[combinacoes[i, 0]] == jogador &&
+                tabuleiro[combinacoes[i, 1]] == jogador &&
+                tabuleiro[combinacoes[i, 2]] == jogador)
+                return true;
+        }
+        return false;
+    }
+
+    static bool TabuleiroCheio()
+    {
+        for (int i = 1; i <= 9; i++)
+            if (tabuleiro[i] == ' ')
+                return false;
+        return true;
+    }
+
+    static void JogarVsJogador()
+    {
+        InicializarTabuleiro();
+        char jogadorAtual = 'X';
+        while (true)
+        {
+            ExibirTabuleiro();
+            Console.Write($"Jogador {jogadorAtual}, escolha uma posição (1-9): ");
+            int pos = int.Parse(Console.ReadLine());
+
+            if (pos < 1 || pos > 9 || tabuleiro[pos] != ' ')
+            {
+                Console.WriteLine("Posição inválida!");
+                Console.ReadKey();
+                continue;
+            }
+
+            tabuleiro[pos] = jogadorAtual;
+
+            if (VerificarVitoria(jogadorAtual))
+            {
+                ExibirTabuleiro();
+                Console.WriteLine($"Jogador {jogadorAtual} venceu!\nPressione qualquer tecla para voltar ao menu principal.");
+                if (jogadorAtual == 'X') vitoriasJogador1++;
+                else vitoriasJogador2++;
+                Console.ReadKey();
+                break;
+            }
+            else if (TabuleiroCheio())
+            {
+                ExibirTabuleiro();
+                Console.WriteLine("Empate!");
+                empates++;
+                Console.ReadKey();
+                break;
+            }
+
+            jogadorAtual = (jogadorAtual == 'X') ? 'O' : 'X';
+        }
+    }
+
+    static void JogarVsComputador(bool dificil)
+    {
+        InicializarTabuleiro();
+        char jogadorHumano = 'X';
+        char jogadorCPU = 'O';
+        char jogadorAtual = 'X';
+        Random rand = new Random();
+
+        while (true)
+        {
+            ExibirTabuleiro();
+            if (jogadorAtual == jogadorHumano)
+            {
+                Console.Write("Sua vez! Escolha uma posição (1-9): ");
+              /// consertar essa desgraça aqui:
+                string pos = (Console.ReadLine());
+                double posic = Convert.ToDouble(pos);
+                if (double.IsNaN(posic))
+                {
+                    Console.WriteLine("Não é uma posição!");
+                    continue;
+                }
+                int posi = Convert.ToInt32(pos);
+                if (posi < 1 || posi > 9 || tabuleiro[posi] != ' ' )
+                {
+                    Console.WriteLine("Posição inválida!");
+                    Console.ReadKey();
+                    continue;
+                }
+                tabuleiro[posi] = jogadorHumano;
+            }
+            else
+            {
+                Console.WriteLine("Computador pensando...");
+                System.Threading.Thread.Sleep(800);
+
+                if (dificil)
+                    JogadaCPU_Dificil(jogadorCPU, jogadorHumano);
+                else
+                {
+                    int pos;
+                    do
+                    {
+                        pos = rand.Next(1, 10);
+                    } while (tabuleiro[pos] != ' ');
+                    tabuleiro[pos] = jogadorCPU;
+                }
+            }
+
+            if (VerificarVitoria(jogadorAtual))
+            {
+                ExibirTabuleiro();
+                Console.WriteLine(jogadorAtual == jogadorHumano ? "Você venceu! \nPressione qualquer tecla para voltar ao menu principal." : "Computador venceu! \nPressione qualquer tecla para voltar ao menu principal.");
+                if (jogadorAtual == jogadorHumano) vitoriasJogador1++;
+                else vitoriasJogador2++;
+                Console.ReadKey();
+                break;
+            }
+            else if (TabuleiroCheio())
+            {
+                ExibirTabuleiro();
+                Console.WriteLine("Empate! \nPressione qualquer tecla para voltar ao menu principal.");
+                empates++;
+                Console.ReadKey();
+                break;
+            }
+
+            jogadorAtual = (jogadorAtual == jogadorHumano) ? jogadorCPU : jogadorHumano;
+        }
+    }
+
+    static void JogadaCPU_Dificil(char cpu, char humano)
+    {
+        int[,] combinacoes = new int[,]
+        {
+            {1,2,3},{4,5,6},{7,8,9},
+            {1,4,7},{2,5,8},{3,6,9},
+            {1,5,9},{3,5,7}
+        };
+
+        // 1. Tenta vencer
+        for (int i = 1; i <= 9; i++)
+        {
+            if (tabuleiro[i] == ' ')
+            {
+                tabuleiro[i] = cpu;
+                if (VerificarVitoria(cpu)) return;
+                tabuleiro[i] = ' ';
+            }
+        }
+
+        // 2. Bloqueia o jogador humano
+        for (int i = 1; i <= 9; i++)
+        {
+            if (tabuleiro[i] == ' ')
+            {
+                tabuleiro[i] = humano;
+                if (VerificarVitoria(humano))
+                {
+                    tabuleiro[i] = cpu;
+                    return;
+                }
+                tabuleiro[i] = ' ';
+            }
+        }
+
+        // 3. Caso contrário, joga aleatoriamente
+        Random rand = new Random();
+        int pos;
+        do
+        {
+            pos = rand.Next(1, 10);
+        } while (tabuleiro[pos] != ' ');
+        tabuleiro[pos] = cpu;
+    }
+
+    static void ExibirRanking()
+    {
+        Console.Clear();
+        Console.WriteLine("=== RANKING ===");
+        Console.WriteLine($"Jogador 1 (X): {vitoriasJogador1} vitórias");
+        Console.WriteLine($"Jogador 2/CPU (O): {vitoriasJogador2} vitórias");
+        Console.WriteLine($"Empates: {empates}");
+        Console.ReadKey();
+    }
+}
